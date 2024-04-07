@@ -56,31 +56,30 @@ void chessboard_to_fen(char fen[], ChessGame *game) {
     fen[count++] = '\0';                            // null pointer
 }
 
-int side_to_side(int row, int col, ChessGame *game, char direction){ // 1 if left 2 if right 0 if non
-    if((row < 0 || row > 8) || (col < 0 || col > 8) || game == NULL){
-        printf("INVALID INNIT COND KILLER %d %d\n",row, col);      //invalid innit cond
-        return false;
-    }
-
-    if(direction == 'H'){
-        if(col-1 > 0 && game->chessboard[row][col-1] != '.')
-            return 1;
-        else if(col+1 < 8 && game->chessboard[row][col+1] != '.')
-            return 2;
-        else
-            return 0;
-    }
-    else if(direction == 'V'){
-        if(row-1 > 0 && game->chessboard[row-1][col] != '.')
-            return 1;
-        else if(row+1 < 8 && game->chessboard[row+1][col] != '.')
-            return 2;
-        else
-            return 0;
-    }
-    else
-    return 0;
-}
+// int side_to_side(int row, int col, ChessGame *game, char direction){ // 1 if left 2 if right 0 if non
+//     if((row < 0 || row > 8) || (col < 0 || col > 8) || game == NULL){
+//         printf("INVALID INNIT COND KILLER %d %d\n",row, col);      //invalid innit cond
+//         return false;
+//     }
+//     if(direction == 'H'){
+//         if(col-1 > 0 && game->chessboard[row][col-1] != '.')
+//             return 1;
+//         else if(col+1 < 8 && game->chessboard[row][col+1] != '.')
+//             return 2;
+//         else
+//             return 0;
+//     }
+//     else if(direction == 'V'){
+//         if(row-1 > 0 && game->chessboard[row-1][col] != '.')
+//             return 1;
+//         else if(row+1 < 8 && game->chessboard[row+1][col] != '.')
+//             return 2;
+//         else
+//             return 0;
+//     }
+//     else
+//     return 0;
+// }
 
 bool is_valid_pawn_move(char piece, int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
     if((src_row < 0 || src_row > 8) || (src_col < 0 || src_col > 8) 
@@ -90,26 +89,26 @@ bool is_valid_pawn_move(char piece, int src_row, int src_col, int dest_row, int 
     }
 
     if(piece == 'p'){   // black moves torwards 0
-        if(src_row == 6 && dest_row - src_row ==2 && src_col == dest_col
+        if(src_row == 1 && dest_row - src_row ==2 && src_col == dest_col
         && game->chessboard[src_row+1][src_col] == '.' && game->chessboard[dest_row][dest_col] == '.') 
             return true;        //start allows move of 2
-        else if(dest_row - dest_row == 1 && src_col == dest_col && game->chessboard[dest_row][dest_col] == '.'){
+        else if(dest_row - src_row == 1 && src_col == dest_col && game->chessboard[dest_row][dest_col] == '.'){
             return true;         // down one
         }
-        else if(src_col != dest_col && abs(src_row - dest_row) == 1 && side_to_side(dest_row,dest_col,game,'h') != 0){ //kill 
+        else if(src_col != dest_col && dest_row - src_row == 1 && game->chessboard[dest_row][dest_col] != '.'){ //kill 
             return true; //kill 
         }
         else
             return false;
     }
     else if(piece == 'P'){  // white moves torwards 7
-        if(src_row == 1 && src_row - dest_row ==2 && src_col == dest_col 
-        && game->chessboard[dest_row+1][dest_col] == '.' && game->chessboard[dest_row][dest_col] == '.')   
+        if(src_row == 6 && src_row - dest_row ==2 && src_col == dest_col 
+        && game->chessboard[src_row-1][dest_col] == '.' && game->chessboard[dest_row][dest_col] == '.')   
             return true;    //start allows move of 2
         else if(src_row - dest_row ==1 && src_col == dest_col && game->chessboard[dest_row][dest_col] == '.'){ 
             return true;    // move up one
         }
-        else if(src_col != dest_col && src_row - dest_row ==1 && side_to_side(dest_row,dest_col,game,'h') != 0){ 
+        else if(src_col != dest_col && src_row - dest_row ==1 && game->chessboard[dest_row][dest_col] != '.'){ 
             return true;    //kill
         }
         else
@@ -119,26 +118,6 @@ bool is_valid_pawn_move(char piece, int src_row, int src_col, int dest_row, int 
     return false;
 }
 
-// (void)piece;
-
-//     if((src_row == 6 || src_row == 1) && abs(src_row - dest_row) ==2 && src_col == dest_col){ 
-//         if(src_row == 6 && game->chessboard[dest_row][dest_col] == '.' 
-//         && game->chessboard[dest_row+1][dest_col] == '.')
-//             return true;        //start allows move of 2
-//         else if(src_row == 1 && game->chessboard[dest_row][dest_col] == '.' 
-//         && game->chessboard[dest_row-1][dest_col] == '.')
-//             return true;        //start allows move of 2
-//         else 
-//             return false;
-//     }
-    
-//     else if(abs(src_row - dest_row) == 1 && src_col == dest_col && game->chessboard[dest_row][dest_col] == '.')
-//         return true;         // down one
-//     else if(src_col != dest_col && abs(src_row - dest_row) == 1 && side_to_side(src_row,src_col,game,'h') != 0) //kill 
-//         return true; //kill 
-//     else
-//         return false;
-
 bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, ChessGame *game) {
     if((src_row < 0 || src_row > 8) || (src_col < 0 || src_col > 8) 
     || (dest_row < 0 || dest_row > 8) || (dest_col < 0 || dest_col > 8) || game == NULL){
@@ -147,7 +126,13 @@ bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, Ch
     }
     int start = 0, end = 0;
 
-    if(src_row != dest_row && src_col == dest_col){ // horizontal 
+    if(game->chessboard[dest_row][dest_col] != '.' && 
+    isupper(game->chessboard[src_row][src_col])==isupper(game->chessboard[dest_row][dest_col])){
+        //printf("dest and src are same\n");
+        return false;
+    }
+
+    if(src_row != dest_row && src_col == dest_col){ // vertical 
         if(src_row > dest_row){
             start = dest_row;
             end = src_row;
@@ -164,7 +149,7 @@ bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, Ch
                 return true;
 
     }
-    else if(src_col != dest_col && src_row == dest_row){ // vertical 
+    else if(src_col != dest_col && src_row == dest_row){ // horizontal 
         if(src_col > dest_col){
             start = dest_col;
             end = src_col;
@@ -173,6 +158,9 @@ bool is_valid_rook_move(int src_row, int src_col, int dest_row, int dest_col, Ch
             end = dest_col;
             start = src_col;
         }
+
+        if(game->chessboard[src_row][start+1] != '.')
+            return false;
 
         for(int i = start+1; i < end-1; i++){ //checks if road is clear
             if(game->chessboard[src_row][i] != '.')
@@ -209,10 +197,17 @@ bool is_valid_bishop_move(int src_row, int src_col, int dest_row, int dest_col, 
     
     int quadrant = 0; //SPLIT BOARD INTO 4 QUADRANTS BASED ON WHERE THE PEICE IS
     
+    if(game->chessboard[dest_row][dest_col] != '.' && 
+    isupper(game->chessboard[src_row][src_col]) == isupper(game->chessboard[dest_row][dest_col])){
+        //printf("dest and src are same\n");
+        return false;
+    }
+
     if((abs(src_col - dest_col) / abs(src_row - dest_row)) != 1){
         printf("bishop col/row is not 1\n");
         return false;
     }
+    
 
     if(dest_row > src_row && dest_col > src_col)
         quadrant = 1;                   // destination to to the top right
@@ -227,11 +222,8 @@ bool is_valid_bishop_move(int src_row, int src_col, int dest_row, int dest_col, 
         return false;
 
 
-    int i = src_row+1, e = src_col+1;
-    while(i < dest_row-1){
-            if(game->chessboard[i][e] != '.')
-                return false;
-
+    int i = src_row, e = src_col, increments = 0, max = abs(src_col - dest_col)-1;
+    while(increments < max){
             if(quadrant == 1){
                 i++;
                 e++;
@@ -248,6 +240,9 @@ bool is_valid_bishop_move(int src_row, int src_col, int dest_row, int dest_col, 
                 i--;
                 e++;
             }
+            if(game->chessboard[i][e] != '.')
+                return false;
+            increments++;
         }
 
     return true;
@@ -287,7 +282,7 @@ bool is_valid_move(char piece, int src_row, int src_col, int dest_row, int dest_
     else if(toupper(piece) == 'Q')  // queen
         return is_valid_queen_move(src_row, src_col, dest_row, dest_col, game);
     else if(toupper(piece) == 'K')  // king
-        return is_valid_knight_move(src_row, src_col, dest_row, dest_col);
+        return is_valid_king_move(src_row, src_col, dest_row, dest_col);
     else
         return false;
 }
