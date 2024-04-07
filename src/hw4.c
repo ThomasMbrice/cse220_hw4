@@ -323,6 +323,9 @@ void fen_to_chessboard(const char *fen, ChessGame *game) {
 }
 
 int parse_move(const char *move, ChessMove *parsed_move) {
+    if(strlen(move) > 5)
+        return PARSE_MOVE_INVALID_FORMAT;
+
     for(int i = 0; i < 4; i++){
         if(i == 2 || i == 0){
             if(move[i] < 'a' || move[i] > 'h'){
@@ -423,6 +426,43 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
 }
 
 int send_command(ChessGame *game, const char *message, int socketfd, bool is_client) {
+    // char buffer[255];
+    // int counter = 0;
+    // while(message[counter] != ' ' || message[counter] != '\0')
+    //     buffer[counter] = message[counter++];
+    // buffer[++counter] = '\0';
+
+    // if(strcmp(buffer, "/move")){
+    //     counter--;
+    //     ChessMove c1;
+    //     char move[255];
+    //     while(message[counter] != ' ' || message[counter] != '\0')
+    //         move[counter] = message[counter++];
+    //     move[++counter] = '\0';
+    //     if(parse_move(move, &c1) != 0)
+    //         return COMMAND_ERROR;
+    //     if(make_move(game, &c1, is_client, false));            //should this be false?
+    //         return COMMAND_ERROR;
+    //                                                             //what after?
+    //     return 0;
+    // }
+    // else if(strcmp(buffer, "/forfeit")){
+        
+    // }
+    // else if(strcmp(buffer, "/chessboard")){
+    //     display_chessboard(game);
+    //     return COMMAND_DISPLAY;
+    // }
+    // else if(strcmp(buffer, "/import")){
+
+    // }
+    // else if(strcmp(buffer, "/load")){
+
+    // }
+    // else{
+    //     printf("MAJOR READING COMMAND ERROR \n");
+    //     return -1;
+    // }
     (void)game;
     (void)message;
     (void)socketfd;
@@ -443,6 +483,14 @@ int save_game(ChessGame *game, const char *username, const char *db_filename) {
     if (file == NULL) {
         printf("Error opening file\n");
         return -1;
+    }
+    if (strchr(username, ' ') != NULL) {
+        return -1; // Username contains a space
+    }
+
+    // Check if the username is empty
+    if (strlen(username) == 0) {
+        return -1; // Username is empty
     }
 
     char fen[1048];
@@ -468,24 +516,43 @@ int load_game(ChessGame *game, const char *username, const char *db_filename, in
         return -1;
     
     char line[1048];
-    int count = 0;
+    int count = 0, thecount = 0;
+    char name[255], fen[255];
 
     while (fgets(line, sizeof(line), file)) {
-        char *name = strtok(line, ":");
-        char *fen = strtok(":", "\n");
+    count = 0;
 
-        if(strcmp(name, username) == 0) {
+    while (line[count] != ':' && line[count] != '\0') {
+        name[count] = line[count];
         count++;
-            if (count == save_number) {
-                fen_to_chessboard(fen,game);
-                fclose(file);
-                return 0; // success
+    }
+    name[count] = '\0'; 
+
+    if (line[count] == ':') {
+        count++;
+    }
+
+    int fen_count = 0;
+    while (line[count] != '\n' && line[count] != '\0') {
+        fen[fen_count] = line[count];
+        fen_count++;
+        count++;
+    }
+    fen[fen_count] = '\0'; 
+
+    if (strcmp(name, username) == 0) {
+        thecount++;
+        if (thecount == save_number) {
+            fen_to_chessboard(fen, game);
+            fclose(file);
+            return 0; // Success
             }
         }
     }
+                printf("PRINTING LINE %s : %s \n %s \n",name, fen, line);
+
     fclose(file);
     return -1;          //fail
-
 }
 
 void display_chessboard(ChessGame *game) {
