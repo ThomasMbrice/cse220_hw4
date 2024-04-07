@@ -323,49 +323,54 @@ void fen_to_chessboard(const char *fen, ChessGame *game) {
 }
 
 int parse_move(const char *move, ChessMove *parsed_move) {
-    //ChessMove *parsed_movecopy = parsed_move;
-    if(strlen(move) == 4 || strlen(move) == 5){              //regular move   
+    for(int i = 0; i < 4; i++){
+        if(i == 2 || i == 0){
+            if(move[i] < 'a' || move[i] > 'h'){
+                return PARSE_MOVE_INVALID_FORMAT;
+            }
+        }
+        if(i == 1 || i == 3){
+            if(move[i] < '1' || move[i] > '8'){
+                return PARSE_MOVE_OUT_OF_BOUNDS;
+            }
+        }
+    }
+    if((strlen(move) == 4 || strlen(move) == 5) && (move[0] >= 'a' && move[0] <= 'h')){              //regular move   
         parsed_move->startSquare[0] = move[0];
         parsed_move->startSquare[1] = move[1];
         parsed_move->startSquare[2] = '\0';
         parsed_move->endSquare[0] = move[2];
         parsed_move->endSquare[1] = move[3];
-        parsed_move->endSquare[2] = '\0';
         if(strlen(move) == 5){                   // for pawn promotion
-            if(!(move[3] == 8 || move[3] == 1)){
+            if(!(move[3] == '8' || move[3] == '1')){
                 return PARSE_MOVE_INVALID_DESTINATION;
             }
             if(!(move[4] == 'q' || move[4] == 'r' || move[4] == 'b' || move[4] == 'n'))
                 return PARSE_MOVE_INVALID_PROMOTION;
-            
+
             parsed_move->endSquare[2] = move[4];
             parsed_move->endSquare[3] = '\0';
         } 
+        else{
+            parsed_move->endSquare[2] = '\0';
+        }
     }
     else
         return PARSE_MOVE_INVALID_FORMAT;
 
-
-    for(int i = 0; i < 2; i++){
-        if(i == 0){
-            if(parsed_move->startSquare[i] < 97 || parsed_move->endSquare[i] < 97 
-            || parsed_move->startSquare[i] > 104 || parsed_move->endSquare[i] > 104)
-                return PARSE_MOVE_INVALID_FORMAT;
-
-        }
-        if(i == 1){
-            if(parsed_move->startSquare[i] < 1 || parsed_move->endSquare[i] < 1 
-            || parsed_move->startSquare[i] > 8 || parsed_move->endSquare[i] > 8)
-                return PARSE_MOVE_OUT_OF_BOUNDS;
-        }
-    }
     return 0;
 }
 
 int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_move) {
-    int x = move->startSquare[0]-97, y = move->startSquare[0]-1 , 
-    endx = move->endSquare[0]-97, endy = move->endSquare[0]-1, 
+    int y = move->startSquare[0]-97, x = move->startSquare[1] - '1' , 
+    endy = move->endSquare[0]-97, endx = move->endSquare[1] - '1', 
     movesize = strlen(move->endSquare) + strlen(move->startSquare);             // movesize
+    //need to convert from chess to array cords
+    x = (abs(8-x-1));
+    //y = (abs(8-y-1));
+    endx = (abs(8-endx-1));
+    //endy = (abs(8-endy-1));
+
     char peice = game->chessboard[x][y];
     char endpeice = game->chessboard[endx][endy];
     validate_move = is_valid_move(peice, x, y, endx, endy, game);
@@ -375,11 +380,11 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
         return MOVE_OUT_OF_TURN;
     else if(peice == '.')                               // tries to move nothing
         return MOVE_NOTHING;
-    if(is_client == true && isupper(peice) == false)    // white tries to move black peice
+    else if(is_client == true && tolower(peice) == peice)    // white tries to move black peice
         return MOVE_WRONG_COLOR;
-    else if(is_client == false && isupper(peice) == true)       // black tries to move white
+    else if(is_client == false && toupper(peice) == peice)       // black tries to move white
         return MOVE_WRONG_COLOR;
-    else if (isupper(peice) == isupper(peice))
+    else if (endpeice != '.' && (isupper(peice) == isupper(endpeice)))
         return MOVE_SUS;                                        // capture own peice
     else if((movesize == 5) && (toupper(peice) != 'P'))
         return MOVE_NOT_A_PAWN;
@@ -406,7 +411,7 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
         game->capturedPieces[game->capturedCount++] = endpeice; //upadte that array
     }
 
-    game->moves[game->moveCount] = *move;
+    game->moves[game->moveCount++] = *move;         //ince rement
 
     if(game->currentPlayer == 0)                //change game player
         game->currentPlayer = 1;
