@@ -289,7 +289,7 @@ bool is_valid_move(char piece, int src_row, int src_col, int dest_row, int dest_
 
 void fen_to_chessboard(const char *fen, ChessGame *game) {
     int count = 0, x = 0, y = 0, num = 0; 
-    while(fen[count] != '\n'){ 
+    while(!isspace(fen[count])){ 
         
         if(x == 8)
             break;              // end if at last row
@@ -426,52 +426,58 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
 }
 
 int send_command(ChessGame *game, const char *message, int socketfd, bool is_client) {
-    // char buffer[255];
-    // int counter = 0;
-    // while(message[counter] != ' ' || message[counter] != '\0')
-    //     buffer[counter] = message[counter++];
-    // buffer[++counter] = '\0';
-
-    // if(strcmp(buffer, "/move")){
-    //     counter--;
-    //     ChessMove c1;
-    //     char move[255];
-    //     while(message[counter] != ' ' || message[counter] != '\0')
-    //         move[counter] = message[counter++];
-    //     move[++counter] = '\0';
-    //     if(parse_move(move, &c1) != 0)
-    //         return COMMAND_ERROR;
-    //     if(make_move(game, &c1, is_client, false));            //should this be false?
-    //         return COMMAND_ERROR;
-    //                                                             //what after?
-    //     return COMMAND_MOVE;
-    // }
-    // else if(strcmp(buffer, "/forfeit")){
+    char buffer[255];
+    int counter = 0;
+    while(!isspace(message[counter])){
+        buffer[counter] = message[counter];
+        counter++;
+    }
+    buffer[counter] = '\0';
+    counter++;
+    
+    if(strcmp(buffer, "/move") == 0){
+        int temp = 0;
+        ChessMove c1;
+        char move[255];
+        while(counter < (int)strlen(message)){
+            move[temp] = message[counter];
+            counter++;
+            temp++;
+        }
+        move[temp] = '\0';
+        if(parse_move(move, &c1) != 0)
+            return COMMAND_ERROR;
+        if(make_move(game, &c1, is_client, false))            //should this be false?
+            return COMMAND_ERROR;
+                                                                //what after?
+        return COMMAND_MOVE;
+    }
+    else if(strcmp(buffer, "/forfeit") == 0){
         
-    //     return COMMAND_FORFEIT;
-    // }
-    // else if(strcmp(buffer, "/chessboard")){
-    //     display_chessboard(game);
-    //     return COMMAND_DISPLAY;
-    // }
-    // else if(strcmp(buffer, "/import")){
+        return COMMAND_FORFEIT;
+    }
+    else if(strcmp(buffer, "/chessboard") == 0){
+        display_chessboard(game);
+        return COMMAND_DISPLAY;
+    }
+    else if(strcmp(buffer, "/import") == 0){
         
-    //     return COMMAND_IMPORT;
-    // }
-    // else if(strcmp(buffer, "/load")){
+        return COMMAND_IMPORT;
+    }
+    else if(strcmp(buffer, "/load") == 0){
 
-    // }
-    // else{
-    //     printf("MAJOR READING COMMAND ERROR \n");
-    //     return COMMAND_UNKNOWN;
-    // }
+    }
+    else{
+        printf("MAJOR READING COMMAND ERROR \n");
+        return COMMAND_UNKNOWN;
+    }
 
-    // return COMMAND_UNKNOWN;
-    (void)game;
-    (void)message;
+    return COMMAND_UNKNOWN;
+    // (void)game;
+    // (void)message;
     (void)socketfd;
-    (void)is_client;
-    return -999;
+    // (void)is_client;
+    // return -999;
 }
 
 int receive_command(ChessGame *game, const char *message, int socketfd, bool is_client) {
