@@ -288,42 +288,82 @@ bool is_valid_move(char piece, int src_row, int src_col, int dest_row, int dest_
 }
 
 void fen_to_chessboard(const char *fen, ChessGame *game) {
-    int count = 0, x = 0, y = 0, num = 0; 
-    while(!isspace(fen[count])){ 
-        
-        if(x == 8)
-            break;              // end if at last row
+    int count = 0, x = 0, y = 0, num = 0;
+    char set[8][9];
+    while(!isspace(fen[count]) && x < 8){
+        while(fen[count] != '/' && y < 8){
+            set[x][y++] = fen[count++];
+        }
+    count++;
+    set[x][y] = '\0';
+    x++;
+    y = 0;
+    }   
+    y = 0;
+    int temp = 0;
 
-        while(fen[count] != '/'){
-            if(fen[count] >= '1' && fen[count] <= '8'){
-                num = fen[count] - '0';
-                for(int i = 0; i < num; i++){
-                    game->chessboard[x][y++] = '.';
-                }
-                count++;
+    for(int i = 0; i < 8; i++){
+        while(set[i][y] != '\0' && y < 8 && num < 8){
+            if (set[i][y] < '1' || set[i][y] > '8') {           //if not number
+                game->chessboard[i][num] = set[i][y];
+                num++;
             }
             else{
-                game->chessboard[x][y++] = fen[count++];
+                temp = set[i][y] - '0';
+                while(temp > 0 && num < 8){
+                    game->chessboard[i][num] = '.';
+                    num++;
+                    temp--;
+                }
             }
+            y++;        //col increases every rotation of the loop
         }
-        count++;                // move past '/'
-        x++;                    // rest increment x
-        y = 0;                  // reset y
-        
+    num = 0;
+    y= 0;
     }
-    // count++; // Move past the whitespace
-    // printf("\ncurrent player %c count %d \n", fen[count], count);
-    // printf("\ntotal %s\n", fen);
-    if(fen[strlen(fen)-1] == 'b')
+
+    if(fen[strlen(fen)-1] == 'b'){
+       // printf("char is %c ", fen[strlen(fen)-1]);
         game->currentPlayer = 1;
-    else if(fen[strlen(fen)-1] == 'w')
+    }
+    else if(fen[strlen(fen)-1] == 'w'){
+       // printf("char is %c ", fen[strlen(fen)-1]);
         game->currentPlayer = 0;
+    }
     else
         printf("ERROR: Invalid current player marker\n");
 }
+// while(!isspace(fen[count]) || strlen(fen) > (size_t)count){ 
+        
+//         if(x == 8)
+//             break;              // end if at last row
+
+//         while(fen[count] != '/'){
+//             if(fen[count] >= '1' && fen[count] <= '8'){
+//                 num = fen[count] - '0';
+//                 for(int i = 0; i < num; i++){
+//                     game->chessboard[x][y++] = '.';
+//                 }
+//                 count++;
+//             }
+//             else{
+//                 game->chessboard[x][y] = fen[count++];
+//                 y++;
+//                 count++;
+//             }
+//         }
+//         count++;                // move past '/'
+//         x++;                    // rest increment x
+//         y = 0;                  // reset y
+        
+//     }
+//      count++; // Move past the whitespace
+//      printf("\ncurrent player %c count %d \n", fen[count], count);
+//      printf("\ntotal %s\n", fen);
+
 
 int parse_move(const char *move, ChessMove *parsed_move) {
-    if(strlen(move) > 5)
+    if(strlen(move) > 5)                            // add less than 4
         return PARSE_MOVE_INVALID_FORMAT;
 
     for(int i = 0; i < 4; i++){
