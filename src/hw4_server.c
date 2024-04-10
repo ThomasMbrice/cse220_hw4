@@ -2,6 +2,7 @@
 
 int main() {
     int listenfd, connfd;
+    //char buffer[BUFFER_SIZE] = {0};
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);

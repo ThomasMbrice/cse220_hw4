@@ -11,6 +11,8 @@
 
 int main() {
     ChessGame game;
+    char buffer[BUFFER_SIZE] = {0};
+    initialize_game(&game);
     int connfd = 0;
     struct sockaddr_in serv_addr;
 
@@ -36,7 +38,14 @@ int main() {
     display_chessboard(&game);
 
     while (1) {
-        // Fill this in
+        printf("[Client] Enter message: ");
+        memset(buffer, 0, BUFFER_SIZE);
+        fgets(buffer, BUFFER_SIZE, stdin);
+        buffer[strlen(buffer)-1] = '\0';
+        
+
+
+
     }
 
     // Please ensure that the following lines of code execute just before your program terminates.

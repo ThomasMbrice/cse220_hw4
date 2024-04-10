@@ -459,25 +459,39 @@ int send_command(ChessGame *game, const char *message, int socketfd, bool is_cli
         move[temp] = '\0';
         if(parse_move(move, &c1) != 0)
             return COMMAND_ERROR;
-        if(make_move(game, &c1, is_client, false))            //should this be false?
+        if(make_move(game, &c1, is_client, true) != 0)           //should this be false?
             return COMMAND_ERROR;
-                                                                //what after?
         return COMMAND_MOVE;
     }
     else if(strcmp(buffer, "/forfeit") == 0){
-        
+        (void)socketfd;                              // Close socket??
         return COMMAND_FORFEIT;
     }
     else if(strcmp(buffer, "/chessboard") == 0){
         display_chessboard(game);
         return COMMAND_DISPLAY;
     }
-    else if(strcmp(buffer, "/import") == 0){
-        
+    else if((strcmp(buffer, "/import")==0) && (is_client == false)){
+        int temp = 0;
+        char fen[255];
+        while(counter < (int)strlen(message)){
+            fen[temp] = message[counter];
+            counter++;
+            temp++;
+        }
+        fen[temp] = '\0';
+        fen_to_chessboard(fen, game);
         return COMMAND_IMPORT;
     }
     else if(strcmp(buffer, "/load") == 0){
-
+        // int temp = 0;
+        // char fen[255];
+        // while(counter < (int)strlen(message)){
+        //     fen[temp] = message[counter];
+        //     counter++;
+        //     temp++;
+        // }
+        // fen[temp] = '\0';
         return COMMAND_LOAD;
     }
     else if(strcmp(buffer, "/save") == 0){
@@ -490,11 +504,7 @@ int send_command(ChessGame *game, const char *message, int socketfd, bool is_cli
     }
 
     return COMMAND_UNKNOWN;
-    // (void)game;
-    // (void)message;
-    (void)socketfd;
-    // (void)is_client;
-    // return -999;
+   
 }
 
 int receive_command(ChessGame *game, const char *message, int socketfd, bool is_client) {
@@ -519,29 +529,45 @@ int receive_command(ChessGame *game, const char *message, int socketfd, bool is_
         move[temp] = '\0';
         if(parse_move(move, &c1) != 0)
             return COMMAND_ERROR;
-        if(make_move(game, &c1, is_client, false))            //should this be false?
+        if(make_move(game, &c1, is_client, true) != 0)           //should this be false?
             return COMMAND_ERROR;
-                                                                //what after?
+         printf("num is %d \n", make_move(game, &c1, is_client, true));                   //what after?
         return COMMAND_MOVE;
     }
     else if(strcmp(buffer, "/forfeit") == 0){
-        
+        close(socketfd);                              // Close socket??
         return COMMAND_FORFEIT;
     }
     else if(strcmp(buffer, "/chessboard") == 0){
         display_chessboard(game);
         return COMMAND_DISPLAY;
     }
-    else if(strcmp(buffer, "/import") == 0){
-        
+    else if((strcmp(buffer, "/import") == 0) && (is_client == true)){
+        int temp = 0;
+        char fen[255];
+        while(counter < (int)strlen(message)){
+            fen[temp] = message[counter];
+            counter++;
+            temp++;
+        }
+        fen[temp] = '\0';
+        fen_to_chessboard(fen, game);
         return COMMAND_IMPORT;
+
     }
     else if(strcmp(buffer, "/load") == 0){
+        // int temp = 0;
+        // char fen[255];
+        // while(counter < (int)strlen(message)){
+        //     fen[temp] = message[counter];
+        //     counter++;
+        //     temp++;
+        // }
+        // fen[temp] = '\0';
 
         return COMMAND_LOAD;
     }
     else if(strcmp(buffer, "/save") == 0){
-
         return COMMAND_SAVE;
     }
     else{
@@ -550,11 +576,7 @@ int receive_command(ChessGame *game, const char *message, int socketfd, bool is_
     }
 
     return COMMAND_UNKNOWN;
-    // (void)game;
-    // (void)message;
-    (void)socketfd;
-    // (void)is_client;
-    // return -999;
+
 }
 
 int save_game(ChessGame *game, const char *username, const char *db_filename) {
