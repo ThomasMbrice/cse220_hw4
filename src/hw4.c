@@ -333,34 +333,6 @@ void fen_to_chessboard(const char *fen, ChessGame *game) {
     else
         printf("ERROR: Invalid current player marker\n");
 }
-// while(!isspace(fen[count]) || strlen(fen) > (size_t)count){ 
-        
-//         if(x == 8)
-//             break;              // end if at last row
-
-//         while(fen[count] != '/'){
-//             if(fen[count] >= '1' && fen[count] <= '8'){
-//                 num = fen[count] - '0';
-//                 for(int i = 0; i < num; i++){
-//                     game->chessboard[x][y++] = '.';
-//                 }
-//                 count++;
-//             }
-//             else{
-//                 game->chessboard[x][y] = fen[count++];
-//                 y++;
-//                 count++;
-//             }
-//         }
-//         count++;                // move past '/'
-//         x++;                    // rest increment x
-//         y = 0;                  // reset y
-        
-//     }
-//      count++; // Move past the whitespace
-//      printf("\ncurrent player %c count %d \n", fen[count], count);
-//      printf("\ntotal %s\n", fen);
-
 
 int parse_move(const char *move, ChessMove *parsed_move) {
     if(strlen(move) > 5)                            // add less than 4
@@ -506,6 +478,11 @@ int send_command(ChessGame *game, const char *message, int socketfd, bool is_cli
     }
     else if(strcmp(buffer, "/load") == 0){
 
+        return COMMAND_LOAD;
+    }
+    else if(strcmp(buffer, "/save") == 0){
+
+        return COMMAND_SAVE;
     }
     else{
         printf("MAJOR READING COMMAND ERROR \n");
@@ -521,11 +498,63 @@ int send_command(ChessGame *game, const char *message, int socketfd, bool is_cli
 }
 
 int receive_command(ChessGame *game, const char *message, int socketfd, bool is_client) {
-    (void)game;
-    (void)message;
+    char buffer[255];
+    int counter = 0;
+    while(!isspace(message[counter])){
+        buffer[counter] = message[counter];
+        counter++;
+    }
+    buffer[counter] = '\0';
+    counter++;
+    
+    if(strcmp(buffer, "/move") == 0){
+        int temp = 0;
+        ChessMove c1;
+        char move[255];
+        while(counter < (int)strlen(message)){
+            move[temp] = message[counter];
+            counter++;
+            temp++;
+        }
+        move[temp] = '\0';
+        if(parse_move(move, &c1) != 0)
+            return COMMAND_ERROR;
+        if(make_move(game, &c1, is_client, false))            //should this be false?
+            return COMMAND_ERROR;
+                                                                //what after?
+        return COMMAND_MOVE;
+    }
+    else if(strcmp(buffer, "/forfeit") == 0){
+        
+        return COMMAND_FORFEIT;
+    }
+    else if(strcmp(buffer, "/chessboard") == 0){
+        display_chessboard(game);
+        return COMMAND_DISPLAY;
+    }
+    else if(strcmp(buffer, "/import") == 0){
+        
+        return COMMAND_IMPORT;
+    }
+    else if(strcmp(buffer, "/load") == 0){
+
+        return COMMAND_LOAD;
+    }
+    else if(strcmp(buffer, "/save") == 0){
+
+        return COMMAND_SAVE;
+    }
+    else{
+        printf("MAJOR READING COMMAND ERROR \n");
+        return COMMAND_UNKNOWN;
+    }
+
+    return COMMAND_UNKNOWN;
+    // (void)game;
+    // (void)message;
     (void)socketfd;
-    (void)is_client;
-    return -999;
+    // (void)is_client;
+    // return -999;
 }
 
 int save_game(ChessGame *game, const char *username, const char *db_filename) {
