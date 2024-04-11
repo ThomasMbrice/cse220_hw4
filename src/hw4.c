@@ -403,7 +403,7 @@ int make_move(ChessGame *game, ChessMove *move, bool is_client, bool validate_mo
         return MOVE_SUS;                                        // capture own peice
     else if((movesize == 5) && (toupper(peice) != 'P'))
         return MOVE_NOT_A_PAWN;
-    else if((movesize == 4) && (toupper(peice) == 'P') && (endy == 0 || endy == 7))
+    else if((movesize == 4) && (toupper(peice) == 'P') && (endx == 0 || endx == 7))
         return MOVE_MISSING_PROMOTION;
     else if(validate_move == false)
         return MOVE_WRONG;
@@ -484,17 +484,37 @@ int send_command(ChessGame *game, const char *message, int socketfd, bool is_cli
         return COMMAND_IMPORT;
     }
     else if(strcmp(buffer, "/load") == 0){
-        // int temp = 0;
-        // char fen[255];
-        // while(counter < (int)strlen(message)){
-        //     fen[temp] = message[counter];
-        //     counter++;
-        //     temp++;
-        // }
-        // fen[temp] = '\0';
+        int temp = 0;
+        char fen[255];
+        int numb = 0;
+        while(!isspace(message[counter])){      // assign save username
+             fen[temp] = message[counter];
+             counter++;
+            temp++;
+         }
+        fen[temp] = '\0';
+        counter++;
+        while(counter < (int)strlen(message)){      // assign save number
+             numb += message[counter] - '0';
+             counter++;
+         }
+
+        if(load_game(game,fen,"game_database.txt",numb) != 0)
+            return COMMAND_ERROR;
+
         return COMMAND_LOAD;
     }
     else if(strcmp(buffer, "/save") == 0){
+        char move[255];
+        int temp = 0;
+        while(counter < (int)strlen(message)){
+            move[temp] = message[counter];
+            counter++;
+            temp++;
+        }
+        move[temp] = '\0';
+        if(save_game(game,move,"game_database.txt") != 0)
+            return COMMAND_ERROR;
 
         return COMMAND_SAVE;
     }
@@ -529,9 +549,9 @@ int receive_command(ChessGame *game, const char *message, int socketfd, bool is_
         move[temp] = '\0';
         if(parse_move(move, &c1) != 0)
             return COMMAND_ERROR;
-        if(make_move(game, &c1, is_client, true) != 0)           //should this be false?
+        if(make_move(game, &c1, !is_client, false) != 0)           //should this be false?
             return COMMAND_ERROR;
-         printf("num is %d \n", make_move(game, &c1, is_client, true));                   //what after?
+        //printf("num is %d \n", make_move(game, &c1, is_client, true));                   //what after?
         return COMMAND_MOVE;
     }
     else if(strcmp(buffer, "/forfeit") == 0){
@@ -556,23 +576,44 @@ int receive_command(ChessGame *game, const char *message, int socketfd, bool is_
 
     }
     else if(strcmp(buffer, "/load") == 0){
-        // int temp = 0;
-        // char fen[255];
-        // while(counter < (int)strlen(message)){
-        //     fen[temp] = message[counter];
-        //     counter++;
-        //     temp++;
-        // }
-        // fen[temp] = '\0';
+        int temp = 0;
+        char fen[255];
+        int numb = 0;
+        while(!isspace(message[counter])){      // assign save username
+             fen[temp] = message[counter];
+             counter++;
+            temp++;
+         }
+        fen[temp] = '\0';
+        counter++;
+        while(counter < (int)strlen(message)){      // assign save number
+             numb += message[counter] - '0';
+             counter++;
+
+         }
+
+        if(load_game(game,fen,"game_database.txt",numb) != 0)
+            return COMMAND_ERROR;
 
         return COMMAND_LOAD;
     }
     else if(strcmp(buffer, "/save") == 0){
+        char move[255];
+        int temp = 0;
+        while(counter < (int)strlen(message)){
+            move[temp] = message[counter];
+            counter++;
+            temp++;
+        }
+        move[temp] = '\0';
+        if(save_game(game,move,"game_database.txt") != 0)
+            return COMMAND_ERROR;
+
         return COMMAND_SAVE;
     }
     else{
         printf("MAJOR READING COMMAND ERROR \n");
-        return COMMAND_UNKNOWN;
+        return COMMAND_ERROR;
     }
 
     return COMMAND_UNKNOWN;
@@ -601,10 +642,6 @@ int save_game(ChessGame *game, const char *username, const char *db_filename) {
     fclose(file);
 
     return 0; // Successful save operation
-
-
-
-    return -999;
 }
 
 int load_game(ChessGame *game, const char *username, const char *db_filename, int save_number) {
